@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>br.com.nexfleet</groupId>
+  <artifactId>services</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <modules>
+    <module>identidade</module>
+    <module>frota</module>
+    <module>operacoes</module>
+    <module>indicadores</module>
+    <module>bff</module>
+    <module>gateway</module>
+  </modules>
+</project>
