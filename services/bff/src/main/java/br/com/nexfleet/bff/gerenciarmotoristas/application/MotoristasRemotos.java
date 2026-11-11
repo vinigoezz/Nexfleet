@@ -32,4 +32,6 @@ public interface MotoristasRemotos {
   Dados criar(String token, Entrada entrada);
 
   Dados atualizar(String token, UUID id, Entrada entrada);
+
+  void excluir(String token, UUID id);
 }

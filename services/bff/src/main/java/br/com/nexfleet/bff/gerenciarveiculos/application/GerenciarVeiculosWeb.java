@@ -4,9 +4,11 @@ import java.util.*;
 
 public class GerenciarVeiculosWeb {
   private final VeiculosRemotos veiculos;
+  private final HistoricoOperacional historico;
 
-  public GerenciarVeiculosWeb(VeiculosRemotos veiculos) {
+  public GerenciarVeiculosWeb(VeiculosRemotos veiculos, HistoricoOperacional historico) {
     this.veiculos = veiculos;
+    this.historico = historico;
   }
 
   public List<VeiculosRemotos.Dados> listar(
@@ -29,6 +31,18 @@ public class GerenciarVeiculosWeb {
 
   public void inativar(String token, UUID id) {
     veiculos.inativar(bearer(token), id);
+  }
+
+  /**
+   * Exclusão definitiva (ADR 0038). O BFF confirma em Operações que não há manutenções; o Frota
+   * confirma que o veículo está inativo e sem vínculos (todo abastecimento exige vínculo).
+   */
+  public void excluir(String token, UUID id) {
+    var bearer = bearer(token);
+    if (historico.possuiManutencoes(bearer, id))
+      throw new FalhaVeiculos(
+          409, "O veículo possui histórico e não pode ser excluído. Mantenha-o inativo.");
+    veiculos.excluir(bearer, id);
   }
 
   private String bearer(String value) {

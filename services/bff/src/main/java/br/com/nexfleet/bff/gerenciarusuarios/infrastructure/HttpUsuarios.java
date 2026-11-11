@@ -84,6 +84,26 @@ public class HttpUsuarios implements UsuariosRemotos {
                 .toBodilessEntity());
   }
 
+  @Override
+  public void excluir(String token, UUID id) {
+    try {
+      chamada(
+          () ->
+              client
+                  .delete()
+                  .uri(PATH + "/{id}/definitivo", id)
+                  .header("Authorization", token)
+                  .retrieve()
+                  .toBodilessEntity());
+    } catch (FalhaUsuarios e) {
+      // 422 na exclusão: conta ainda ativa ou tentativa de excluir a própria conta.
+      if (e.status() == 422)
+        throw new FalhaUsuarios(
+            422, "Só é possível excluir uma conta desativada, e nunca a sua própria.");
+      throw e;
+    }
+  }
+
   private Dados validar(Dados dados) {
     if (dados == null
         || dados.id() == null

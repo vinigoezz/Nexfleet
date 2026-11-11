@@ -27,6 +27,11 @@ public class GerenciarMotoristasWeb {
     return motoristas.atualizar(bearer(token), id, entrada);
   }
 
+  /** Exclusão definitiva (ADR 0038): o Frota exige motorista inativo e sem vínculos. */
+  public void excluir(String token, UUID id) {
+    motoristas.excluir(bearer(token), id);
+  }
+
   private String bearer(String value) {
     if (value == null || value.length() > 8192 || !value.matches("Bearer [^\\s]+"))
       throw new FalhaMotoristas(401);

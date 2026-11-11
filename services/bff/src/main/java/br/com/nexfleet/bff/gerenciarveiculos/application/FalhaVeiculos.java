@@ -4,7 +4,11 @@ public class FalhaVeiculos extends RuntimeException {
   private final int status;
 
   public FalhaVeiculos(int status) {
-    super(mensagem(status));
+    this(status, mensagem(status));
+  }
+
+  public FalhaVeiculos(int status, String mensagem) {
+    super(mensagem);
     this.status = status;
   }
 

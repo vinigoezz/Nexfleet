@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import {
   ErroMotoristas,
+  excluirMotorista,
   listarMotoristas,
   salvarMotorista,
   type Motorista,
@@ -33,6 +34,7 @@ export function Motoristas({ token }: { token: string }) {
   const [validadeCnh, setValidadeCnh] = useState("");
   const [telefone, setTelefone] = useState("");
   const [status, setStatus] = useState<StatusMotorista>("ATIVO");
+  const [confirmarExclusao, setConfirmarExclusao] = useState<Motorista>();
   const ocupado = carregando || salvando;
   const validacaoMotorista = useFormValidation("motorista-validacao");
 
@@ -96,6 +98,25 @@ export function Motoristas({ token }: { token: string }) {
       limpar();
       setRevisao((valor) => valor + 1);
     } catch (error) {
+      falha(error);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function excluir() {
+    if (!confirmarExclusao) return;
+    setSalvando(true);
+    setErro("");
+    setMensagem("");
+    try {
+      await excluirMotorista(token, confirmarExclusao.id);
+      setMensagem(`Motorista ${confirmarExclusao.nome} excluído.`);
+      if (id === confirmarExclusao.id) limpar();
+      setConfirmarExclusao(undefined);
+      setRevisao((valor) => valor + 1);
+    } catch (error) {
+      setConfirmarExclusao(undefined);
       falha(error);
     } finally {
       setSalvando(false);
@@ -256,10 +277,38 @@ export function Motoristas({ token }: { token: string }) {
               >
                 Editar {motorista.nome}
               </button>
+              {motorista.status === "INATIVO" && (
+                <button
+                  type="button"
+                  className="perigo"
+                  disabled={ocupado}
+                  onClick={() => setConfirmarExclusao(motorista)}
+                >
+                  Excluir {motorista.nome}
+                </button>
+              )}
             </div>
           </li>
         ))}
       </ul>
+      {confirmarExclusao && (
+        <div role="group" aria-label="Confirmar exclusão">
+          <p>
+            Excluir {confirmarExclusao.nome} definitivamente? Esta ação não pode
+            ser desfeita. Motoristas com histórico não podem ser excluídos.
+          </p>
+          <button type="button" className="perigo" disabled={ocupado} onClick={excluir}>
+            Confirmar exclusão
+          </button>
+          <button
+            type="button"
+            disabled={ocupado}
+            onClick={() => setConfirmarExclusao(undefined)}
+          >
+            Cancelar exclusão
+          </button>
+        </div>
+      )}
       <div className="acoes">
         <button
           type="button"

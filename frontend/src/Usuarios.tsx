@@ -3,6 +3,7 @@ import {
   listarContas,
   salvarConta,
   desativarConta,
+  excluirConta,
   ErroUsuarios,
   type Conta,
   type Perfil,
@@ -23,6 +24,7 @@ export function Usuarios({ token }: { token: string }) {
   const [perfil, setPerfil] = useState<Perfil>("GESTOR_FROTA");
   const [ativo, setAtivo] = useState(true);
   const [confirmar, setConfirmar] = useState<Conta>();
+  const [confirmarExclusao, setConfirmarExclusao] = useState<Conta>();
   const ocupado = carregando || salvando;
   const validacaoUsuario = useFormValidation("usuario-validacao");
 
@@ -98,6 +100,25 @@ export function Usuarios({ token }: { token: string }) {
       setConfirmar(undefined);
       setRevisao((value) => value + 1);
     } catch (error) {
+      falha(error);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function excluir() {
+    if (!confirmarExclusao) return;
+    setSalvando(true);
+    setErro("");
+    setMensagem("");
+    try {
+      await excluirConta(token, confirmarExclusao.id);
+      setMensagem(`Usuário ${confirmarExclusao.email} excluído.`);
+      if (id === confirmarExclusao.id) limpar();
+      setConfirmarExclusao(undefined);
+      setRevisao((value) => value + 1);
+    } catch (error) {
+      setConfirmarExclusao(undefined);
       falha(error);
     } finally {
       setSalvando(false);
@@ -220,6 +241,18 @@ export function Usuarios({ token }: { token: string }) {
                 Desativar {conta.email}
               </button>
             )}
+            {!conta.ativo && (
+              <button
+                className="perigo"
+                disabled={ocupado}
+                onClick={() => {
+                  setConfirmar(undefined);
+                  setConfirmarExclusao(conta);
+                }}
+              >
+                Excluir {conta.email}
+              </button>
+            )}
           </li>
         ))}
       </ul>
@@ -231,6 +264,20 @@ export function Usuarios({ token }: { token: string }) {
           </button>
           <button disabled={ocupado} onClick={() => setConfirmar(undefined)}>
             Cancelar desativação
+          </button>
+        </div>
+      )}
+      {confirmarExclusao && (
+        <div className="confirmacao-card perigo" role="group" aria-label="Confirmar exclusão">
+          <p>
+            Excluir {confirmarExclusao.email} definitivamente? Esta ação não pode ser
+            desfeita.
+          </p>
+          <button className="perigo" disabled={ocupado} onClick={excluir}>
+            Confirmar exclusão
+          </button>
+          <button disabled={ocupado} onClick={() => setConfirmarExclusao(undefined)}>
+            Cancelar exclusão
           </button>
         </div>
       )}

@@ -26,9 +26,13 @@ const statusValidos = new Set<StatusVeiculo>([
 ]);
 
 export class ErroVeiculos extends Error {
-  constructor(public status: number) {
+  constructor(
+    public status: number,
+    mensagem?: string,
+  ) {
     super(
-      status === 401
+      mensagem ??
+      (status === 401
         ? "Sessão expirada. Entre novamente."
         : status === 403
           ? "Seu perfil não pode acessar a Frota."
@@ -38,7 +42,7 @@ export class ErroVeiculos extends Error {
               ? "Esta placa já está cadastrada."
               : status === 400 || status === 422
                 ? "Confira placa, marca, modelo, ano, tipo, quilometragem, status e data."
-                : "Não foi possível acessar a Frota. Tente novamente.",
+                : "Não foi possível acessar a Frota. Tente novamente."),
     );
   }
 }
@@ -120,6 +124,27 @@ export async function inativarVeiculo(
   id: string,
 ): Promise<void> {
   await request(token, `/${encodeURIComponent(id)}`, "DELETE");
+}
+
+/** Exclusão definitiva: só para veículo inativo e sem histórico (ADR 0038). */
+export async function excluirVeiculo(token: string, id: string): Promise<void> {
+  const response = await fetch(
+    apiUrl(`/api/v1/veiculos/${encodeURIComponent(id)}/definitivo`),
+    {
+      method: "DELETE",
+      credentials: "omit",
+      signal: AbortSignal.timeout(10000),
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+  if (response.ok) return;
+  // 409 (com histórico) e 422 (ainda ativo) trazem a explicação do servidor.
+  let mensagem: string | undefined;
+  if (response.status === 409 || response.status === 422) {
+    const corpo = await response.json().catch(() => null);
+    if (corpo && typeof corpo.message === "string") mensagem = corpo.message;
+  }
+  throw new ErroVeiculos(response.status, mensagem);
 }
 import { apiUrl } from "./api-url";
 

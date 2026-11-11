@@ -28,10 +28,13 @@ public class SecurityConfig {
                     "/api/v1/auth/login",
                     "/api/v1/usuarios",
                     "/api/v1/usuarios/*",
+                    "/api/v1/usuarios/*/definitivo",
                     "/api/v1/veiculos",
                     "/api/v1/veiculos/*",
+                    "/api/v1/veiculos/*/definitivo",
                     "/api/v1/motoristas",
                     "/api/v1/motoristas/*",
+                    "/api/v1/motoristas/*/definitivo",
                     "/api/v1/vinculos",
                     "/api/v1/vinculos/*/encerramento",
                     "/api/v1/abastecimentos",
@@ -54,16 +57,21 @@ public class SecurityConfig {
               var session = auth.requestMatchers(HttpMethod.GET, "/api/v1/auth/me");
               if (rsa) session.authenticated();
               else session.permitAll(); // Legado: validação delegada a Identidade.
-              var users = auth.requestMatchers("/api/v1/usuarios", "/api/v1/usuarios/*");
+              var users =
+                  auth.requestMatchers(
+                      "/api/v1/usuarios", "/api/v1/usuarios/*", "/api/v1/usuarios/*/definitivo");
               if (rsa) users.authenticated();
               else
                 users
                     .permitAll(); // Identidade aplica autorização administrativa em ambos os modos.
-              var fleet = auth.requestMatchers("/api/v1/veiculos", "/api/v1/veiculos/*");
+              var fleet =
+                  auth.requestMatchers(
+                      "/api/v1/veiculos", "/api/v1/veiculos/*", "/api/v1/veiculos/*/definitivo");
               if (rsa) fleet.authenticated();
               else fleet.denyAll(); // Frota valida JWT assimétrico diretamente.
               var drivers =
-                  auth.requestMatchers("/api/v1/motoristas", "/api/v1/motoristas/*");
+                  auth.requestMatchers(
+                      "/api/v1/motoristas", "/api/v1/motoristas/*", "/api/v1/motoristas/*/definitivo");
               if (rsa) drivers.authenticated();
               else drivers.denyAll();
               var links =

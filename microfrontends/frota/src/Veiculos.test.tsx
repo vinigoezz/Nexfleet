@@ -128,6 +128,45 @@ it("inativa somente após confirmação", async () => {
   );
 });
 
+it("oferece exclusão só para inativo, confirma e usa a rota definitiva", async () => {
+  const inativo = { ...veiculo, status: "INATIVO" };
+  const fetch = vi
+    .fn()
+    .mockResolvedValueOnce(json([veiculo, { ...inativo, id: "c176f1b1-bc54-4f22-9b2e-fb69469ab033", placa: "XYZ9K87" }]))
+    .mockResolvedValueOnce(new Response(null, { status: 204 }))
+    .mockResolvedValueOnce(json([veiculo]));
+  vi.stubGlobal("fetch", fetch);
+  render(<Veiculos token="teste" />);
+  await screen.findByRole("button", { name: "Editar ABC1D23" });
+  expect(screen.queryByRole("button", { name: "Excluir ABC1D23" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Excluir XYZ9K87" }));
+  expect(fetch).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole("button", { name: "Confirmar exclusão" }));
+  await screen.findByText("Veículo XYZ9K87 excluído.");
+  expect(fetch).toHaveBeenNthCalledWith(
+    2,
+    "/api/v1/veiculos/c176f1b1-bc54-4f22-9b2e-fb69469ab033/definitivo",
+    expect.objectContaining({ method: "DELETE" }),
+  );
+});
+
+it("explica quando o veículo tem histórico", async () => {
+  const inativo = { ...veiculo, status: "INATIVO" };
+  vi.stubGlobal(
+    "fetch",
+    vi
+      .fn()
+      .mockResolvedValueOnce(json([inativo]))
+      .mockResolvedValueOnce(
+        json({ message: "O veículo possui histórico e não pode ser excluído. Mantenha-o inativo." }, 409),
+      ),
+  );
+  render(<Veiculos token="teste" />);
+  fireEvent.click(await screen.findByRole("button", { name: "Excluir ABC1D23" }));
+  fireEvent.click(screen.getByRole("button", { name: "Confirmar exclusão" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("possui histórico");
+});
+
 it("recusa resposta fora do contrato", async () => {
   vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json([{ ...veiculo, status: "OUTRO" }])));
   await expect(listarVeiculos("teste", 0)).rejects.toThrow("Não foi possível");

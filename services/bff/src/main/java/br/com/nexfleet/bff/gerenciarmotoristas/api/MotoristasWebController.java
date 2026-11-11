@@ -49,6 +49,14 @@ public class MotoristasWebController {
     return semCache(motoristas.atualizar(token, id, entrada));
   }
 
+  @DeleteMapping("/{id}/definitivo")
+  public ResponseEntity<Void> excluir(
+      @RequestHeader(value = "Authorization", required = false) String token,
+      @PathVariable UUID id) {
+    motoristas.excluir(token, id);
+    return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
+  }
+
   private <T> ResponseEntity<T> semCache(T body) {
     return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(body);
   }

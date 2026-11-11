@@ -30,6 +30,11 @@ public class GerenciarUsuariosWeb {
     usuarios.desativar(bearer(token), id);
   }
 
+  /** Exclusão definitiva (ADR 0038): a Identidade exige conta desativada e diferente da própria. */
+  public void excluir(String token, UUID id) {
+    usuarios.excluir(bearer(token), id);
+  }
+
   private String bearer(String value) {
     if (value == null || value.length() > 8192 || !value.matches("Bearer [^\\s]+"))
       throw new FalhaUsuarios(401);

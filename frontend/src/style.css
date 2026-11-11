@@ -527,6 +527,17 @@ body.nexfleet-autenticado .landing-footer { display: none; }
 .confirmacao-card p { margin-bottom: 12px; }
 .confirmacao-card button { margin-right: 8px; }
 
+/* Exclusão definitiva: ação destrutiva destacada em vermelho. */
+.usuarios-admin button.perigo,
+.usuarios-admin li button.perigo {
+  border-color: #fca5a5;
+  background: #fff;
+  color: #b91c1c;
+}
+.usuarios-admin button.perigo:hover:not(:disabled) { background: #fef2f2; border-color: #dc2626; }
+.confirmacao-card.perigo { border-color: #fecaca; background: #fef2f2; }
+.usuarios-admin .confirmacao-card button.perigo { background: #dc2626; border-color: #dc2626; color: #fff; }
+
 .skip-link {
   position: fixed;
   z-index: 200;

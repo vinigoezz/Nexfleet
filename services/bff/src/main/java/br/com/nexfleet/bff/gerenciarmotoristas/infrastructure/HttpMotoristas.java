@@ -82,6 +82,28 @@ public class HttpMotoristas implements MotoristasRemotos {
                     .body(Dados.class)));
   }
 
+  @Override
+  public void excluir(String token, UUID id) {
+    try {
+      chamada(
+          () ->
+              client
+                  .delete()
+                  .uri(PATH + "/{id}/definitivo", id)
+                  .header("Authorization", token)
+                  .retrieve()
+                  .toBodilessEntity());
+    } catch (FalhaMotoristas e) {
+      // Na exclusão, 409 e 422 têm significado próprio (não é CPF duplicado nem dado inválido).
+      if (e.status() == 409)
+        throw new FalhaMotoristas(
+            409, "O motorista possui histórico e não pode ser excluído. Mantenha-o inativo.");
+      if (e.status() == 422)
+        throw new FalhaMotoristas(422, "Inative o motorista antes de excluí-lo.");
+      throw e;
+    }
+  }
+
   private Dados validar(Dados dados) {
     if (dados == null
         || dados.id() == null

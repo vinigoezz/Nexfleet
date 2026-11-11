@@ -4,7 +4,8 @@ public class FalhaUsuarios extends RuntimeException {
   private final int status;
 
   public FalhaUsuarios(int status) {
-    super(
+    this(
+        status,
         switch (status) {
           case 400, 422 -> "Confira os campos informados.";
           case 401 -> "Sessão inválida. Entre novamente.";
@@ -13,6 +14,10 @@ public class FalhaUsuarios extends RuntimeException {
           case 409 -> "E-mail já cadastrado.";
           default -> "Serviço de usuários indisponível. Tente novamente.";
         });
+  }
+
+  public FalhaUsuarios(int status, String mensagem) {
+    super(mensagem);
     this.status = status;
   }
 

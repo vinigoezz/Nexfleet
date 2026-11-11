@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import {
   ErroVeiculos,
+  excluirVeiculo,
   inativarVeiculo,
   listarVeiculos,
   salvarVeiculo,
@@ -36,6 +37,7 @@ export function Veiculos({ token }: { token: string }) {
   const [status, setStatus] = useState<StatusVeiculo>("DISPONIVEL");
   const [dataAquisicao, setDataAquisicao] = useState(hoje());
   const [confirmar, setConfirmar] = useState<Veiculo>();
+  const [confirmarExclusao, setConfirmarExclusao] = useState<Veiculo>();
   const ocupado = carregando || salvando;
   const validacaoVeiculo = useFormValidation("veiculo-validacao");
 
@@ -127,6 +129,25 @@ export function Veiculos({ token }: { token: string }) {
       setConfirmar(undefined);
       setRevisao((valor) => valor + 1);
     } catch (error) {
+      falha(error);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function excluir() {
+    if (!confirmarExclusao) return;
+    setSalvando(true);
+    setErro("");
+    setMensagem("");
+    try {
+      await excluirVeiculo(token, confirmarExclusao.id);
+      setMensagem(`Veículo ${confirmarExclusao.placa} excluído.`);
+      if (id === confirmarExclusao.id) limpar();
+      setConfirmarExclusao(undefined);
+      setRevisao((valor) => valor + 1);
+    } catch (error) {
+      setConfirmarExclusao(undefined);
       falha(error);
     } finally {
       setSalvando(false);
@@ -306,6 +327,19 @@ export function Veiculos({ token }: { token: string }) {
                   Inativar {veiculo.placa}
                 </button>
               )}
+              {veiculo.status === "INATIVO" && (
+                <button
+                  type="button"
+                  className="perigo"
+                  disabled={ocupado}
+                  onClick={() => {
+                    setConfirmar(undefined);
+                    setConfirmarExclusao(veiculo);
+                  }}
+                >
+                  Excluir {veiculo.placa}
+                </button>
+              )}
             </div>
           </li>
         ))}
@@ -322,6 +356,24 @@ export function Veiculos({ token }: { token: string }) {
             onClick={() => setConfirmar(undefined)}
           >
             Cancelar inativação
+          </button>
+        </div>
+      )}
+      {confirmarExclusao && (
+        <div role="group" aria-label="Confirmar exclusão">
+          <p>
+            Excluir {confirmarExclusao.placa} definitivamente? Esta ação não pode
+            ser desfeita. Veículos com histórico não podem ser excluídos.
+          </p>
+          <button type="button" className="perigo" disabled={ocupado} onClick={excluir}>
+            Confirmar exclusão
+          </button>
+          <button
+            type="button"
+            disabled={ocupado}
+            onClick={() => setConfirmarExclusao(undefined)}
+          >
+            Cancelar exclusão
           </button>
         </div>
       )}

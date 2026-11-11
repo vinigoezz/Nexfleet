@@ -24,4 +24,6 @@ public interface UsuariosRemotos {
   Dados atualizar(String bearer, UUID id, Atualizar entrada);
 
   void desativar(String bearer, UUID id);
+
+  void excluir(String bearer, UUID id);
 }

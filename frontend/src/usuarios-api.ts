@@ -7,9 +7,13 @@ export type Conta = {
 };
 
 export class ErroUsuarios extends Error {
-  constructor(public status: number) {
+  constructor(
+    public status: number,
+    mensagem?: string,
+  ) {
     super(
-      status === 401
+      mensagem ??
+      (status === 401
         ? "Sessão expirada. Entre novamente."
         : status === 403
           ? "Acesso exclusivo de Administrador ativo."
@@ -19,7 +23,7 @@ export class ErroUsuarios extends Error {
               ? "Confira e-mail, perfil e senha (12 caracteres a 72 bytes UTF-8)."
               : status === 404
                 ? "Usuário não encontrado. Atualize a lista."
-                : "Não foi possível acessar os usuários. Tente novamente.",
+                : "Não foi possível acessar os usuários. Tente novamente."),
     );
   }
 }
@@ -89,6 +93,26 @@ export async function salvarConta(
 }
 export async function desativarConta(token: string, id: string): Promise<void> {
   await request(token, `/${encodeURIComponent(id)}`, "DELETE");
+}
+
+/** Exclusão definitiva: só para conta desativada e diferente da própria (ADR 0038). */
+export async function excluirConta(token: string, id: string): Promise<void> {
+  const response = await fetch(
+    apiUrl(`/api/v1/usuarios/${encodeURIComponent(id)}/definitivo`),
+    {
+      method: "DELETE",
+      credentials: "omit",
+      signal: AbortSignal.timeout(10000),
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+  if (response.ok) return;
+  let mensagem: string | undefined;
+  if (response.status === 422) {
+    const corpo = await response.json().catch(() => null);
+    if (corpo && typeof corpo.message === "string") mensagem = corpo.message;
+  }
+  throw new ErroUsuarios(response.status, mensagem);
 }
 import { apiUrl } from "./api-url";
 

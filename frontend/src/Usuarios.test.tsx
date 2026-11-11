@@ -170,6 +170,28 @@ it("CQ06 mantém o e-mail válido e identifica a senha obrigatória", async () =
   );
   expect(fetch).toHaveBeenCalledTimes(1);
 });
+it("exclui somente conta desativada e após confirmação", async () => {
+  const fetch = vi
+    .fn()
+    .mockResolvedValueOnce(json([conta, { ...conta, id: "f2f6b588-00cf-45bc-927e-c4a08647dfde", email: "antigo@example.com", ativo: false }]))
+    .mockResolvedValueOnce(new Response(null, { status: 204 }))
+    .mockResolvedValueOnce(json([conta]));
+  vi.stubGlobal("fetch", fetch);
+  render(<Usuarios token="teste" />);
+  await screen.findByRole("button", { name: "Editar novo@example.com" });
+  expect(
+    screen.queryByRole("button", { name: "Excluir novo@example.com" }),
+  ).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Excluir antigo@example.com" }));
+  expect(fetch).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole("button", { name: "Confirmar exclusão" }));
+  await screen.findByText("Usuário antigo@example.com excluído.");
+  expect(fetch).toHaveBeenNthCalledWith(
+    2,
+    "/api/v1/usuarios/f2f6b588-00cf-45bc-927e-c4a08647dfde/definitivo",
+    expect.objectContaining({ method: "DELETE" }),
+  );
+});
 it("recusa contrato inválido", async () => {
   vi.stubGlobal(
     "fetch",

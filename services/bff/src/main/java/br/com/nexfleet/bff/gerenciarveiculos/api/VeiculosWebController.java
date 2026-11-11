@@ -57,6 +57,14 @@ public class VeiculosWebController {
     return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
   }
 
+  @DeleteMapping("/{id}/definitivo")
+  public ResponseEntity<Void> excluir(
+      @RequestHeader(value = "Authorization", required = false) String token,
+      @PathVariable UUID id) {
+    veiculos.excluir(token, id);
+    return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
+  }
+
   private <T> ResponseEntity<T> semCache(T body) {
     return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(body);
   }

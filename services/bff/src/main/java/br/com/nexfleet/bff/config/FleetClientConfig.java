@@ -3,6 +3,7 @@ package br.com.nexfleet.bff.config;
 import br.com.nexfleet.bff.gerenciarmotoristas.application.GerenciarMotoristasWeb;
 import br.com.nexfleet.bff.gerenciarmotoristas.infrastructure.HttpMotoristas;
 import br.com.nexfleet.bff.gerenciarveiculos.application.GerenciarVeiculosWeb;
+import br.com.nexfleet.bff.gerenciarveiculos.infrastructure.HttpHistoricoOperacional;
 import br.com.nexfleet.bff.gerenciarveiculos.infrastructure.HttpVeiculos;
 import br.com.nexfleet.bff.gerenciarvinculos.application.GerenciarVinculosWeb;
 import br.com.nexfleet.bff.gerenciarvinculos.infrastructure.HttpVinculos;
@@ -28,8 +29,11 @@ public class FleetClientConfig {
   }
 
   @Bean
-  GerenciarVeiculosWeb veiculosWeb(@Qualifier("frotaRestClient") RestClient client) {
-    return new GerenciarVeiculosWeb(new HttpVeiculos(client));
+  GerenciarVeiculosWeb veiculosWeb(
+      @Qualifier("frotaRestClient") RestClient client,
+      @Qualifier("operacoesRestClient") RestClient operacoes) {
+    return new GerenciarVeiculosWeb(
+        new HttpVeiculos(client), new HttpHistoricoOperacional(operacoes));
   }
 
   @Bean

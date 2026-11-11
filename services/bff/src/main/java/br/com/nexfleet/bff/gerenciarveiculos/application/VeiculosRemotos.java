@@ -36,4 +36,6 @@ public interface VeiculosRemotos {
   Dados atualizar(String token, UUID id, Entrada entrada);
 
   void inativar(String token, UUID id);
+
+  void excluir(String token, UUID id);
 }

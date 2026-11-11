@@ -142,6 +142,20 @@
   color: #46556b;
 }
 
+/* Exclusão definitiva: ação destrutiva destacada em vermelho. */
+.mfe-frota button.perigo,
+.mfe-frota li button.perigo,
+.mfe-frota .acoes button.perigo {
+  border-color: #fca5a5;
+  background: #fff;
+  color: #b91c1c;
+}
+.mfe-frota button.perigo:hover:not(:disabled) { background: #fef2f2; border-color: #dc2626; }
+.mfe-frota [role="group"] button.perigo { background: #dc2626; border-color: #dc2626; color: #fff; }
+.mfe-frota [role="group"] button.perigo:hover:not(:disabled) { background: #b91c1c; }
+.mfe-frota [role="group"] { margin: 18px 0; padding: 16px; border: 1px solid #fecaca; border-radius: 12px; background: #fef2f2; }
+.mfe-frota [role="group"] button { margin-right: 8px; }
+
 .mfe-frota > section > label { display: inline-grid; gap: 7px; margin: 6px 0 14px; }
 .mfe-frota ul {
   display: grid;

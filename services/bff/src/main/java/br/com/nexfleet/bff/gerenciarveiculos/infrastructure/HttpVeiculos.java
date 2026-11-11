@@ -95,6 +95,27 @@ public class HttpVeiculos implements VeiculosRemotos {
                 .toBodilessEntity());
   }
 
+  @Override
+  public void excluir(String token, UUID id) {
+    try {
+      chamada(
+          () ->
+              client
+                  .delete()
+                  .uri(PATH + "/{id}/definitivo", id)
+                  .header("Authorization", token)
+                  .retrieve()
+                  .toBodilessEntity());
+    } catch (FalhaVeiculos e) {
+      // Na exclusão, 409 e 422 têm significado próprio (não é placa duplicada nem dado inválido).
+      if (e.status() == 409)
+        throw new FalhaVeiculos(
+            409, "O veículo possui histórico e não pode ser excluído. Mantenha-o inativo.");
+      if (e.status() == 422) throw new FalhaVeiculos(422, "Inative o veículo antes de excluí-lo.");
+      throw e;
+    }
+  }
+
   private Dados validar(Dados dados) {
     if (dados == null
         || dados.id() == null

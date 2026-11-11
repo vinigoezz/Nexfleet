@@ -16,9 +16,13 @@ export type DadosMotorista = Omit<Motorista, "id">;
 const statusValidos = new Set<StatusMotorista>(["ATIVO", "INATIVO"]);
 
 export class ErroMotoristas extends Error {
-  constructor(public status: number) {
+  constructor(
+    public status: number,
+    mensagem?: string,
+  ) {
     super(
-      status === 401
+      mensagem ??
+      (status === 401
         ? "Sessão expirada. Entre novamente."
         : status === 403
           ? "Seu perfil não pode acessar a Frota."
@@ -28,7 +32,7 @@ export class ErroMotoristas extends Error {
               ? "O CPF ou a CNH já está cadastrado."
               : status === 400 || status === 422
                 ? "Confira nome, CPF, CNH, categoria, validade, telefone e status."
-                : "Não foi possível acessar os motoristas. Tente novamente.",
+                : "Não foi possível acessar os motoristas. Tente novamente."),
     );
   }
 }
@@ -102,6 +106,26 @@ export async function salvarMotorista(
       dados,
     ),
   );
+}
+
+/** Exclusão definitiva: só para motorista inativo e sem vínculos (ADR 0038). */
+export async function excluirMotorista(token: string, id: string): Promise<void> {
+  const response = await fetch(
+    apiUrl(`/api/v1/motoristas/${encodeURIComponent(id)}/definitivo`),
+    {
+      method: "DELETE",
+      credentials: "omit",
+      signal: AbortSignal.timeout(10000),
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+  if (response.ok) return;
+  let mensagem: string | undefined;
+  if (response.status === 409 || response.status === 422) {
+    const corpo = await response.json().catch(() => null);
+    if (corpo && typeof corpo.message === "string") mensagem = corpo.message;
+  }
+  throw new ErroMotoristas(response.status, mensagem);
 }
 import { apiUrl } from "./api-url";
 
